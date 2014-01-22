@@ -1,14 +1,16 @@
-package pt.lsts.accu_v2;
+package pt.lsts.neptusmobile;
 
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.view.Menu;
 
+import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import pt.lsts.neptusmobile.R;
 
 public class MainActivity extends FragmentActivity {
 
@@ -21,6 +23,8 @@ public class MainActivity extends FragmentActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		GooglePlayServicesUtil
+				.isGooglePlayServicesAvailable(getApplicationContext());
 		setContentView(R.layout.activity_main);
 		// If we're being restored from a previous state,
 		// then we don't need to do anything and should return or else
