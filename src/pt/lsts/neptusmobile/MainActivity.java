@@ -1,7 +1,10 @@
 package pt.lsts.neptusmobile;
 
+import pt.lsts.neptusmobile.imc.ImcService;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.util.Log;
 import android.view.Menu;
 
 import com.google.android.gms.common.GooglePlayServicesUtil;
@@ -10,15 +13,27 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
-import pt.lsts.neptusmobile.R;
 
+/**
+ * For now, everything is in the same activity.
+ * <p>
+ * To do:
+ * <p>
+ * - Put the IMC messages in a seperate Service.
+ * 
+ * @author Margarida
+ * 
+ */
 public class MainActivity extends FragmentActivity {
+	public static final String NAME = "MainActivity";
 
 	/**
 	 * Note that this may be null if the Google Play services APK is not
 	 * available.
 	 */
 	private GoogleMap mMap;
+
+	// private IMCManagerMsgListener imcManager;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -33,7 +48,13 @@ public class MainActivity extends FragmentActivity {
 			return;
 		}
 
-		setUpMapIfNeeded();
+		// // Start comms here upfront
+		// imcManager = new IMCManagerMsgListener();
+		// imcManager.startComms();
+		// setUpMapIfNeeded();
+		Intent intent = new Intent(this, ImcService.class);
+		startService(intent);
+		Log.w(NAME, "onHandleIntent");
 	}
 
 	@Override
@@ -94,5 +115,11 @@ public class MainActivity extends FragmentActivity {
 				.snippet("The most populous city in Australia.")
 				.position(sydney));
 	}
+
+	// @Override
+	// public void onReceive(IMCMessage msg) {
+	// // TODO Auto-generated method stub
+	//
+	// }
 
 }
