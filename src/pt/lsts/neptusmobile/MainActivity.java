@@ -1,8 +1,14 @@
 package pt.lsts.neptusmobile;
 
-import pt.lsts.neptusmobile.imc.ImcService;
-import android.content.Intent;
+import java.util.concurrent.ConcurrentHashMap;
+
+import pt.lsts.imc.IMCMessage;
+import pt.lsts.neptus.messages.listener.MessageInfo;
+import pt.lsts.neptus.messages.listener.MessageListener;
+import pt.lsts.neptusmobile.imc.ImcManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -12,18 +18,9 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-/**
- * For now, everything is in the same activity.
- * <p>
- * To do:
- * <p>
- * - Put the IMC messages in a seperate Service.
- * 
- * @author Margarida
- * 
- */
 public class MainActivity extends FragmentActivity {
 	public static final String NAME = "MainActivity";
 
@@ -32,8 +29,16 @@ public class MainActivity extends FragmentActivity {
 	 * available.
 	 */
 	private GoogleMap mMap;
+	private ConcurrentHashMap<String, Marker> sysMarkers;
 
-	// private IMCManagerMsgListener imcManager;
+	ImcManager imcManager;
+	Hook imcHook;
+	Handler imcHandler = new Handler() {
+		@Override
+		public void handleMessage(Message msg) {
+			Log.w(NAME, "handle called");
+		}
+	};
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -42,19 +47,14 @@ public class MainActivity extends FragmentActivity {
 				.isGooglePlayServicesAvailable(getApplicationContext());
 		setContentView(R.layout.activity_main);
 		// If we're being restored from a previous state,
-		// then we don't need to do anything and should return or else
+		// then we don't need to do anytohing and should return or else
 		// we could end up with overlapping fragments.
 		if (savedInstanceState != null) {
 			return;
 		}
-
-		// // Start comms here upfront
-		// imcManager = new IMCManagerMsgListener();
-		// imcManager.startComms();
-		// setUpMapIfNeeded();
-		Intent intent = new Intent(this, ImcService.class);
-		startService(intent);
-		Log.w(NAME, "onHandleIntent");
+		imcHook = new Hook();
+		imcManager = new ImcManager(imcHook);
+		setUpMapIfNeeded();
 	}
 
 	@Override
@@ -64,24 +64,6 @@ public class MainActivity extends FragmentActivity {
 		return true;
 	}
 
-	/**
-	 * Sets up the map if it is possible to do so (i.e., the Google Play
-	 * services APK is correctly installed) and the map has not already been
-	 * instantiated.. This will ensure that we only ever call
-	 * {@link #setUpMap()} once when {@link #mMap} is not null.
-	 * <p>
-	 * If it isn't installed {@link SupportMapFragment} (and
-	 * {@link com.google.android.gms.maps.MapView MapView}) will show a prompt
-	 * for the user to install/update the Google Play services APK on their
-	 * device.
-	 * <p>
-	 * A user can return to this FragmentActivity after following the prompt and
-	 * correctly installing/updating/enabling the Google Play services. Since
-	 * the FragmentActivity may not have been completely destroyed during this
-	 * process (it is likely that it would only be stopped or paused),
-	 * {@link #onCreate(Bundle)} may not be called again so we should call this
-	 * method in {@link #onResume()} to guarantee that it will be called.
-	 */
 	private void setUpMapIfNeeded() {
 		// Do a null check to confirm that we have not already instantiated the
 		// map.
@@ -96,30 +78,39 @@ public class MainActivity extends FragmentActivity {
 		}
 	}
 
-	/**
-	 * This is where we can add markers or lines, add listeners or move the
-	 * camera. In this case, we just add a marker near Africa.
-	 * <p>
-	 * This should only be called once and when we are sure that {@link #mMap}
-	 * is not null.
-	 */
 	private void setUpMap() {
-		mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title(
-				"Marker"));
+		// Markers
+		sysMarkers = new ConcurrentHashMap<String, Marker>();
+		String markerKey = "Marker";
+		addNewMarker(markerKey,
+				new MarkerOptions().position(new LatLng(0, 0)).title(markerKey));
 		LatLng sydney = new LatLng(-33.867, 151.206);
-
-		mMap.setMyLocationEnabled(true);
-		mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 13));
-
-		mMap.addMarker(new MarkerOptions().title("Sydney")
+		markerKey = "Sydney";
+		addNewMarker(
+				markerKey,
+				new MarkerOptions().title(markerKey)
 				.snippet("The most populous city in Australia.")
-				.position(sydney));
+						.position(sydney));
+		// My location
+		mMap.setMyLocationEnabled(true);
+		// Camer
+		mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 13));
 	}
 
-	// @Override
-	// public void onReceive(IMCMessage msg) {
-	// // TODO Auto-generated method stub
-	//
-	// }
+	private void addNewMarker(String key, MarkerOptions markerOptions) {
+		Marker marker = mMap.addMarker(markerOptions);
+		sysMarkers.put(key, marker);
+	}
 
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+	}
+
+	class Hook implements MessageListener<MessageInfo, IMCMessage> {
+		@Override
+		public void onMessage(MessageInfo arg0, IMCMessage msg) {
+			Log.w(NAME, "on message " + msg.toString());
+		}
+	}
 }
