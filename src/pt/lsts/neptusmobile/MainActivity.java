@@ -3,6 +3,7 @@ package pt.lsts.neptusmobile;
 import java.util.concurrent.ConcurrentHashMap;
 
 import pt.lsts.imc.IMCMessage;
+import pt.lsts.imc.net.IMCProtocol;
 import pt.lsts.neptus.messages.listener.MessageInfo;
 import pt.lsts.neptus.messages.listener.MessageListener;
 import pt.lsts.neptusmobile.imc.ImcManager;
@@ -32,7 +33,7 @@ public class MainActivity extends FragmentActivity {
 	private ConcurrentHashMap<String, Marker> sysMarkers;
 
 	ImcManager imcManager;
-	Hook imcHook;
+	// Hook imcHook;
 	Handler imcHandler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
@@ -52,8 +53,20 @@ public class MainActivity extends FragmentActivity {
 		if (savedInstanceState != null) {
 			return;
 		}
-		imcHook = new Hook();
-		imcManager = new ImcManager(imcHook);
+		// imcHook = new Hook();
+		// imcManager = new ImcManager(imcHook);
+
+		IMCProtocol proto = new IMCProtocol(5000);
+		proto.addMessageListener(
+				new MessageListener<MessageInfo, IMCMessage>() {
+					@Override
+					public void onMessage(MessageInfo info, IMCMessage msg) {
+						Log.w(NAME,
+								msg.getAbbrev() + " received from "
+								+ msg.getSourceName());
+					}
+				}, "Announce", "EstimatedState");
+
 		setUpMapIfNeeded();
 	}
 
@@ -82,14 +95,14 @@ public class MainActivity extends FragmentActivity {
 		// Markers
 		sysMarkers = new ConcurrentHashMap<String, Marker>();
 		String markerKey = "Marker";
-		addNewMarker(markerKey,
-				new MarkerOptions().position(new LatLng(0, 0)).title(markerKey));
+		addNewMarker(markerKey, new MarkerOptions().position(new LatLng(0, 0))
+				.title(markerKey));
 		LatLng sydney = new LatLng(-33.867, 151.206);
 		markerKey = "Sydney";
 		addNewMarker(
 				markerKey,
 				new MarkerOptions().title(markerKey)
-				.snippet("The most populous city in Australia.")
+						.snippet("The most populous city in Australia.")
 						.position(sydney));
 		// My location
 		mMap.setMyLocationEnabled(true);

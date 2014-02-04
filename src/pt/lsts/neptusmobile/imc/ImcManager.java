@@ -13,8 +13,10 @@ import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
 
+import pt.lsts.imc.Announce.SYS_TYPE;
 import pt.lsts.imc.IMCDefinition;
 import pt.lsts.imc.IMCMessage;
+import pt.lsts.imc.net.IMCProtocol;
 import pt.lsts.imc.net.UDPTransport;
 import pt.lsts.neptus.messages.listener.MessageInfo;
 import pt.lsts.neptus.messages.listener.MessageListener;
@@ -49,7 +51,7 @@ public class ImcManager {
 				lastIpNumber = 0;
 			else
 				lastIpNumber = Integer.valueOf(localIp.split("\\.")[3]);
-
+			// Use mask with the last octect of ip
 			localId = 0x4100 | lastIpNumber;
 			Log.w(NAME, "System ID: " + localId);
 			String multicastAddress = "224.0.75.69";
@@ -81,46 +83,18 @@ public class ImcManager {
 	 * Method responsible for effectively giving the order to the UDPTransport
 	 * to send the message
 	 */
-	public void send(String address, int port, String msgType) {
-		IMCMessage msg = IMCDefinition.getInstance().create(msgType);
+	public void sendStartingAnnouce(String address, int port) {
+		IMCMessage msg = IMCDefinition.getInstance().create("Announce");
+		IMCProtocol.announce("accu-" + localId, localId, SYS_TYPE.CCU, comm);
 		Log.w(NAME, "Sending msg to " + address + ":" + port);
 		try {
-			fillHeader(msg);
+			msg.getHeader().setValue("src", localId);
+			msg.getHeader().setValue("timestamp",
+					System.currentTimeMillis() / 1000);
 			comm.sendMessage(address, port, msg);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
-
-	private void fillHeader(IMCMessage msg) {
-		msg.getHeader().setValue("src", localId);
-		msg.getHeader()
-				.setValue("timestamp", System.currentTimeMillis() / 1000);
-	}
-
-	/**
-	 * This function return the full address on a service specified in the
-	 * Announce message of a node
-	 * 
-	 * @param msg
-	 *            the message to be inspected
-	 * @param service
-	 *            The name of the service to be looked for
-	 * @return Returns a string like &lt;address:port&gt;, null if msg not an
-	 *         announce or service doesnt exist.
-	 */
-	public static ArrayList<String> getAnnounceService(IMCMessage msg,
-			String service) {
-		String str = msg.getString("services");
-		ArrayList<String> list = new ArrayList<String>();
-		String services[] = str.split(";");
-		Log.w(NAME, "Got " + services.length);
-		for (String s : services) {
-			String foo[] = s.split("://");
-			if (foo[0].equals(service))
-				list.add(foo[1]);
-		}
-		return list;
 	}
 
 	/**
@@ -151,19 +125,18 @@ public class ImcManager {
 
 	/**
 	 * 
-	 * @param msg
-	 *            IMCMessage containing the Announce to extract the address
-	 *            from.
+	 * @param msg IMCMessage containing the Announce to extract the address from.
 	 * @return The node address for IMC communications.
 	 */
-	public static String[] getAnnounceIMCAddressPort(IMCMessage msg) {
-		ArrayList<String> services = getAnnounceService(msg, "imc+udp");
-		for (String s : services) {
+	public static String[] getAnnounceIMCAddressPort(IMCMessage msg)
+	{
+		for(String s: getAnnounceService(msg,"imc+udp"))
+		{
 			try {
-				if (InetAddress.getByName(s.split(":")[0]).isReachable(10)) {
+				if(InetAddress.getByName(s.split(":")[0]).isReachable(50))
+				{
 					String foo[] = s.split(":");
-					String res[] = { foo[0],
-							foo[1].substring(0, foo[1].length() - 1) };
+					String res[] = { foo[0], foo[1].substring(0, foo[1].length()-1)};
 					return res;
 				}
 			} catch (UnknownHostException e) {
@@ -174,15 +147,112 @@ public class ImcManager {
 		}
 		return null;
 	}
+	
+	/**
+	 * This function return the full address on a service specified in the Announce message of a node
+	 * @param msg the message to be inspected
+	 * @param service The name of the service to be looked for
+	 * @return Returns a string like &lt;address:port&gt;, null if msg not an announce or service doesnt exist.
+	 */
+	public static ArrayList<String> getAnnounceService(IMCMessage msg, String service)
+	{
+		String str = msg.getString("services");
+		ArrayList<String> list = new ArrayList<String>();
+		String services[] = str.split(";");
+		for(String s: services)
+		{
+			String foo[] = s.split("://");
+			if(foo[0].equals(service))
+				list.add(foo[1]);
+		}
+		return list;
+	}
+	
+
 
 	class Hook implements MessageListener<MessageInfo, IMCMessage> {
 		private static final boolean DEBUG = true;
 
 		@Override
 		public void onMessage(MessageInfo arg0, IMCMessage msg) {
-			// Deal with announces
-			String sysName = msg.getString("sys_name");
-			String msgType = msg.getAbbrev();
+			// // Deal with announces
+			// String sysName = msg.getString("sys_name");
+			// String msgType = msg.getAbbrev();
+			//
+			// // Process Announce routine
+			// if (msg.getAbbrev().equalsIgnoreCase("Announce")) {
+			// // If System already exists in host list
+			// // if (containsSysName(msg.getString("sys_name"))) {
+			// if (systems.containsKey(sysName)) {
+			// // Sys s = findSysByName(msg.getString("sys_name"));
+			// Sys s = systems.get(sysName);
+			//
+			// if (DEBUG)
+			// Log.i("Log",
+			// "Repeated announce from: "
+			// + msg.getString("sys_name"));
+			//
+			// if (!s.isConnected()) {
+			// s.lastMessageReceived = System.currentTimeMillis();
+			// s.setConnected(true);
+			// // changeList(sysList);
+			// // Send an Heartbeat to resume communications in case of
+			// // system prior crash
+			// try {
+			// send(s.getAddress(),
+			// s.getPort(),
+			// IMCDefinition.getInstance().create(
+			// "Heartbeat"));
+			// } catch (Exception e1) {
+			// e1.printStackTrace();
+			// }
+			// }
+			//
+			// return;
+			// }
+			// // If Service IMC+UDP doesnt exist or isnt reachable, return...
+			// if (getAnnounceService(msg, "imc+udp") == null) {
+			// Log.e(NAME,
+			// msg.getString("sys_name")
+			// + " node doesn't have IMC protocol or isn't reachable");
+			// Log.e(NAME, msg.toString());
+			// return;
+			// }
+			// String[] addrAndPort = getAnnounceIMCAddressPort(msg);
+			// if (addrAndPort == null) {
+			// Log.e(NAME,
+			// "Unreachable System - " + msg.getString("sys_name"));
+			// return;
+			// }
+			// // If Not include it
+			// Log.i("Log", "Adding new System");
+			// Sys s = new Sys(addrAndPort[0],
+			// Integer.parseInt(addrAndPort[1]),
+			// msg.getString("sys_name"),
+			// (Integer) msg.getHeaderValue("src"),
+			// msg.getString("sys_type"), true, false);
+			//
+			// // sysList.add(s);
+			// systems.put(sysName, s);
+			//
+			// // Update the list of available Vehicles
+			// // changeList(sysList);
+			//
+			// // Send an Heartbeat to register as a node in the vehicle (maybe
+			// // EntityList?)
+			// try {
+			// IMCMessage m = IMCDefinition.getInstance().create(
+			// "Heartbeat");
+			// m.getHeader().setValue("src", 0x4100);
+			// send(s.getAddress(), s.getPort(), m);
+			// // sendMessage(s.getAddress(), s.getPort(), m);
+			// } catch (Exception e1) {
+			// e1.printStackTrace();
+			// }
+			// }
+
+			// -----------------------------------------------------------------------
+
 			// If Service IMC+UDP doesnt exist or isnt reachable, return...
 			// if (getAnnounceService(msg, "imc+udp") == null) {
 			// Log.e(NAME, sysName
@@ -190,39 +260,39 @@ public class ImcManager {
 			// Log.e(NAME, msg.toString());
 			// return;
 			// }
-//			String[] addrAndPort = getAnnounceIMCAddressPort(msg);
-			String[] addrAndPort = getAddress(arg0, msg);
-			if (addrAndPort == null) {
-				Log.e(NAME, "No address for " + sysName);
-				return;
-			}
-			Log.w(NAME, "Received " + msgType + " from " + sysName + "@"
-					+ addrAndPort[0] + ":" + addrAndPort[1]);
-			Sys system = systems.get(sysName);
-			if (systems.containsKey(sysName)) {
-				if (DEBUG)
-					Log.w("Log", "Repeated announce from " + sysName);
-				if (system.isConnected()) {
-					return;
-				} else {
-					system.lastMessageReceived = System.currentTimeMillis();
-					system.setConnected(true);
-				}
-			} else {
-				// If Not include it
-				system = new Sys(addrAndPort[0],
-						Integer.parseInt(addrAndPort[1]), sysName,
-						(Integer) msg.getHeaderValue("src"),
-						msg.getString("sys_type"), true, false);
-				systems.put(sysName, system);
-				Log.w("Log", "Added new System");
-			}
-			// Send an Heartbeat to register as a node in the vehicle
-			try {
-				send(system.getAddress(), system.getPort(), "Announce");
-			} catch (Exception e1) {
-				e1.printStackTrace();
-			}
+			// String[] addrAndPort = getAnnounceIMCAddressPort(msg);
+			// String[] addrAndPort = getAddress(arg0, msg);
+			// if (addrAndPort == null) {
+			// Log.e(NAME, "No address for " + sysName);
+			// return;
+			// }
+			// Log.w(NAME, "Received " + msgType + " from " + sysName + "@"
+			// + addrAndPort[0] + ":" + addrAndPort[1]);
+			// Sys system = systems.get(sysName);
+			// if (systems.containsKey(sysName)) {
+			// if (DEBUG)
+			// Log.w("Log", "Repeated announce from " + sysName);
+			// if (system.isConnected()) {
+			// return;
+			// } else {
+			// system.lastMessageReceived = System.currentTimeMillis();
+			// system.setConnected(true);
+			// }
+			// } else {
+			// // If Not include it
+			// system = new Sys(addrAndPort[0],
+			// Integer.parseInt(addrAndPort[1]), sysName,
+			// (Integer) msg.getHeaderValue("src"),
+			// msg.getString("sys_type"), true, false);
+			// systems.put(sysName, system);
+			// Log.w("Log", "Added new System");
+			// }
+			// // Send an Heartbeat to register as a node in the vehicle
+			// try {
+			// sendStartingAnnouce(system.getAddress(), system.getPort());
+			// } catch (Exception e1) {
+			// e1.printStackTrace();
+			// }
 		}
 
 		public String[] getAddress(MessageInfo info, IMCMessage msg) {
@@ -239,6 +309,26 @@ public class ImcManager {
 	        }
 			return null;
 		}
+	}
+
+	/**
+	 * Method responsible for effectively giving the order to the UDPTransport
+	 * to send the message
+	 */
+	public void send(String address, int port, IMCMessage msg) {
+		try {
+			// FIXME Fill the header of the messages here
+			fillHeader(msg);
+			comm.sendMessage(address, port, msg);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void fillHeader(IMCMessage msg) {
+		msg.getHeader().setValue("src", localId);
+		msg.getHeader()
+				.setValue("timestamp", System.currentTimeMillis() / 1000);
 	}
 
 	public InetSocketAddress[] getImcIpsPortsFromMessage(String services,
