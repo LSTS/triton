@@ -8,21 +8,21 @@ import pt.lsts.imc.IMCMessage;
 import pt.lsts.imc.net.IMCProtocol;
 import pt.lsts.neptus.messages.listener.MessageInfo;
 import pt.lsts.neptus.messages.listener.MessageListener;
-import pt.lsts.neptusmobile.imc.ImcManager;
 import pt.lsts.util.WGS84Utilities;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.FragmentActivity;
-import android.util.Log;
 import android.view.Menu;
 
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.maps.android.ui.IconGenerator;
 
 public class AccuMainActivity extends FragmentActivity {
 	public static final String NAME = "MainActivity";
@@ -32,15 +32,20 @@ public class AccuMainActivity extends FragmentActivity {
 	 * available.
 	 */
 	private GoogleMap mMap;
+	private IconGenerator iconFact;
 	private ConcurrentHashMap<Integer, Marker> sysMarkers;
 
-	ImcManager imcManager;
+	// ImcManager imcManager;
 	// Hook imcHook;
-	Handler uiHandler = new Handler() {
+	private final Handler uiHandler = new Handler() {
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see android.os.Handler#handleMessage(android.os.Message)
+		 */
 		@Override
 		public void handleMessage(Message msg) {
-
-			Log.w(NAME, msg.toString());
+			// Log.w(NAME, msg.toString());
 			EstimatedState state = (EstimatedState) msg.obj;
 			int srcId = state.getSrc();
 			double[] wgs84displace = WGS84Utilities.WGS84displace(
@@ -55,16 +60,19 @@ public class AccuMainActivity extends FragmentActivity {
 			String snippet = "Height " + df.format(alt) + "; Speed: "
 					+ df.format(speed);
 			if (marker == null) {
-				MarkerOptions mo =
-						new MarkerOptions()
-								.title(state.getSourceName())
-								.snippet(snippet)
+				MarkerOptions mo = new MarkerOptions()
+						.icon(BitmapDescriptorFactory.fromBitmap(iconFact
+								.makeIcon(state.getSourceName())))
+						.anchor(iconFact.getAnchorU(), iconFact.getAnchorV())
+						.snippet(snippet)
 						.position(stateloc);
 				addNewMarker(srcId, mo);
 			}
 			else{
 				marker.setPosition(stateloc);
 				marker.setSnippet(snippet);
+				marker.setIcon(BitmapDescriptorFactory.fromBitmap(iconFact
+						.makeIcon(state.getSourceName())));
 			}
 		}
 	};
@@ -82,6 +90,7 @@ public class AccuMainActivity extends FragmentActivity {
 			return;
 		}
 
+		iconFact = new IconGenerator(this);
 		setUpMapIfNeeded();
 
 		IMCProtocol proto = new IMCProtocol(5000);
@@ -89,12 +98,6 @@ public class AccuMainActivity extends FragmentActivity {
 				new MessageListener<MessageInfo, IMCMessage>() {
 					@Override
 					public void onMessage(MessageInfo info, IMCMessage msg) {
-						;
-
-						String sysName = msg.getSourceName();
-						// Log.w(NAME,
-						// msg.getAbbrev() + " received from "
-						// + sysName);
 						EstimatedState state = (EstimatedState) msg;
 						uiHandler.sendMessage(uiHandler.obtainMessage(0, state));
 					}
