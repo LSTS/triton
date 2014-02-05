@@ -1,12 +1,15 @@
 package pt.lsts.neptusmobile;
 
+import java.text.DecimalFormat;
 import java.util.concurrent.ConcurrentHashMap;
 
+import pt.lsts.imc.EstimatedState;
 import pt.lsts.imc.IMCMessage;
 import pt.lsts.imc.net.IMCProtocol;
 import pt.lsts.neptus.messages.listener.MessageInfo;
 import pt.lsts.neptus.messages.listener.MessageListener;
 import pt.lsts.neptusmobile.imc.ImcManager;
+import pt.lsts.util.WGS84Utilities;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -15,14 +18,13 @@ import android.util.Log;
 import android.view.Menu;
 
 import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class MainActivity extends FragmentActivity {
+public class AccuMainActivity extends FragmentActivity {
 	public static final String NAME = "MainActivity";
 
 	/**
@@ -30,14 +32,40 @@ public class MainActivity extends FragmentActivity {
 	 * available.
 	 */
 	private GoogleMap mMap;
-	private ConcurrentHashMap<String, Marker> sysMarkers;
+	private ConcurrentHashMap<Integer, Marker> sysMarkers;
 
 	ImcManager imcManager;
 	// Hook imcHook;
-	Handler imcHandler = new Handler() {
+	Handler uiHandler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
-			Log.w(NAME, "handle called");
+
+			Log.w(NAME, msg.toString());
+			EstimatedState state = (EstimatedState) msg.obj;
+			int srcId = state.getSrc();
+			double[] wgs84displace = WGS84Utilities.WGS84displace(
+					Math.toDegrees(state.getLat()),
+					Math.toDegrees(state.getLon()), state.getHeight(),
+					state.getX(), state.getY(), state.getZ());
+			LatLng stateloc = new LatLng((wgs84displace[0]), wgs84displace[1]);
+			double alt = wgs84displace[2];
+			double speed = state.getU();
+			Marker marker = sysMarkers.get(srcId);
+			DecimalFormat df = new DecimalFormat("#.##");
+			String snippet = "Height " + df.format(alt) + "; Speed: "
+					+ df.format(speed);
+			if (marker == null) {
+				MarkerOptions mo =
+						new MarkerOptions()
+								.title(state.getSourceName())
+								.snippet(snippet)
+						.position(stateloc);
+				addNewMarker(srcId, mo);
+			}
+			else{
+				marker.setPosition(stateloc);
+				marker.setSnippet(snippet);
+			}
 		}
 	};
 
@@ -53,21 +81,25 @@ public class MainActivity extends FragmentActivity {
 		if (savedInstanceState != null) {
 			return;
 		}
-		// imcHook = new Hook();
-		// imcManager = new ImcManager(imcHook);
+
+		setUpMapIfNeeded();
 
 		IMCProtocol proto = new IMCProtocol(5000);
 		proto.addMessageListener(
 				new MessageListener<MessageInfo, IMCMessage>() {
 					@Override
 					public void onMessage(MessageInfo info, IMCMessage msg) {
-						Log.w(NAME,
-								msg.getAbbrev() + " received from "
-								+ msg.getSourceName());
-					}
-				}, "Announce", "EstimatedState");
+						;
 
-		setUpMapIfNeeded();
+						String sysName = msg.getSourceName();
+						// Log.w(NAME,
+						// msg.getAbbrev() + " received from "
+						// + sysName);
+						EstimatedState state = (EstimatedState) msg;
+						uiHandler.sendMessage(uiHandler.obtainMessage(0, state));
+					}
+				}, "EstimatedState");
+
 	}
 
 	@Override
@@ -93,24 +125,25 @@ public class MainActivity extends FragmentActivity {
 
 	private void setUpMap() {
 		// Markers
-		sysMarkers = new ConcurrentHashMap<String, Marker>();
-		String markerKey = "Marker";
-		addNewMarker(markerKey, new MarkerOptions().position(new LatLng(0, 0))
-				.title(markerKey));
-		LatLng sydney = new LatLng(-33.867, 151.206);
-		markerKey = "Sydney";
-		addNewMarker(
-				markerKey,
-				new MarkerOptions().title(markerKey)
-						.snippet("The most populous city in Australia.")
-						.position(sydney));
+		sysMarkers = new ConcurrentHashMap<Integer, Marker>();
+		// String markerKey = "Marker";
+		// addNewMarker(markerKey, new MarkerOptions().position(new LatLng(0,
+		// 0))
+		// .title(markerKey));
+		// LatLng sydney = new LatLng(-33.867, 151.206);
+		// markerKey = "Sydney";
+		// addNewMarker(
+		// markerKey,
+		// new MarkerOptions().title(markerKey)
+		// .snippet("The most populous city in Australia.")
+		// .position(sydney));
 		// My location
 		mMap.setMyLocationEnabled(true);
-		// Camer
-		mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 13));
+		// Camera
+		// mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 13));
 	}
 
-	private void addNewMarker(String key, MarkerOptions markerOptions) {
+	private void addNewMarker(Integer key, MarkerOptions markerOptions) {
 		Marker marker = mMap.addMarker(markerOptions);
 		sysMarkers.put(key, marker);
 	}
@@ -120,10 +153,4 @@ public class MainActivity extends FragmentActivity {
 		super.onDestroy();
 	}
 
-	class Hook implements MessageListener<MessageInfo, IMCMessage> {
-		@Override
-		public void onMessage(MessageInfo arg0, IMCMessage msg) {
-			Log.w(NAME, "on message " + msg.toString());
-		}
-	}
 }
