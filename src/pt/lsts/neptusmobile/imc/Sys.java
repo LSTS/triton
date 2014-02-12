@@ -1,116 +1,55 @@
 package pt.lsts.neptusmobile.imc;
 
+import java.text.DecimalFormat;
+
+import pt.lsts.imc.EstimatedState;
+import pt.lsts.neptusmobile.R;
+import pt.lsts.util.WGS84Utilities;
+
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+
 public class Sys {
 	
-	private String mAddress;
-	private int mPort;
-	private String mName;
-	private int mId;
-	public long lastMessageReceived;
-	private String mType;
-	private double[] LLD={0.0,0.0,0.0}; // Lat Lon depth in radians and meters
-	private double[] NED={0.0,0.0,0.0}; // North East Down in meters
-	private double[] RPY={0.0,0.0,0.0}; // Roll Pitch Yaw in radians
+	private final Marker marker;
+	private final LatLng lastPos;
 	
-	private String refMode; // Reference Mode name
-	
-	// This 2 Booleans are used to compute the color of 
-	// each sys in system list and serve as the actual state
-	boolean mConnected;
-	boolean mError;
-	
-	
-	public boolean isError() {
-		return mError;
+	public Sys(Marker marker) {
+		this.marker = marker;
+		lastPos = marker.getPosition();
+		this.marker.setFlat(true);
+		this.marker.setIcon(BitmapDescriptorFactory
+				.fromResource(R.drawable.ic_system));
 	}
 
-	public void setError(boolean error) {
-		this.mError = error;
+	public void update(EstimatedState state) {
+		double[] wgs84displace = WGS84Utilities.WGS84displace(
+				Math.toDegrees(state.getLat()),
+				Math.toDegrees(state.getLon()), state.getHeight(),
+				state.getX(), state.getY(), state.getZ());
+		LatLng stateloc = new LatLng((wgs84displace[0]), wgs84displace[1]);
+		double alt = wgs84displace[2];
+		double speed = state.getU();
+		DecimalFormat df = new DecimalFormat("#.##");
+		marker.setTitle(state.getSourceName());
+		marker.setPosition(stateloc);
+		Float angDeg = getRotationDeg(wgs84displace);
+		marker.setRotation(angDeg);
+		String snippet = "Height " + df.format(alt) + "; Speed: "
+				+ df.format(speed) + "; Rotation:" + angDeg;
+		marker.setSnippet(snippet);
 	}
 
-	public boolean isConnected() {
-		return mConnected;
+	private Float getRotationDeg(double[] wgs84displace) {
+		double[] wgs84displacement = WGS84Utilities.WGS84displacement(
+				Math.toDegrees(lastPos.latitude),
+				Math.toDegrees(lastPos.longitude), 0, wgs84displace[0],
+				wgs84displace[1], 0);
+		double directionAng = Math.atan2(wgs84displacement[0],
+				wgs84displacement[1]);
+		Float angDeg = new Float(Math.toDegrees(directionAng));
+		return angDeg;
 	}
 
-	public void setConnected(boolean mConnected) {
-		this.mConnected = mConnected;
-	}
-
-	public String getAddress() {
-		return mAddress;
-	}
-
-	public void setAddress(String address) {
-		this.mAddress = address;
-	}
-
-	public int getPort() {
-		return mPort;
-	}
-
-	public void setPort(int port) {
-		this.mPort = port;
-	}
-
-	public String getName() {
-		return mName;
-	}
-
-	public void setName(String name) {
-		this.mName = name;
-	}
-	
-	public int getId() {
-		return mId;
-	}
-
-	public void setId(int id) {
-		this.mId = id;
-	}
-	public String getType()
-	{
-		return mType;
-	}
-	public double[] getLLD() {
-		return LLD;
-	}
-
-	public void setLLD(double[] lLD) {
-		LLD = lLD;
-	}
-
-	public double[] getNED() {
-		return NED;
-	}
-
-	public void setNED(double[] nED) {
-		NED = nED;
-	}
-
-	public double[] getRPY() {
-		return RPY;
-	}
-
-	public void setRPY(double[] rPY) {
-		RPY = rPY;
-	}
-	public String getRefMode() {
-		return refMode;
-	}
-
-	public void setRefMode(String refMode) {
-		this.refMode = refMode;
-	}
-	public Sys(String address, int port, String name, int id, String type, boolean connected, boolean error) {
-		super();
-		this.mAddress = address;
-		this.mPort = port;
-		this.mName = name;
-		this.mId = id;
-		this.mConnected = connected;
-		this.mError = error;
-		this.mType = type;
-		lastMessageReceived = System.currentTimeMillis();
-	}
-	
 }
