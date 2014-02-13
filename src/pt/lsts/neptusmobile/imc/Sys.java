@@ -34,22 +34,12 @@ public class Sys {
 		DecimalFormat df = new DecimalFormat("#.##");
 		marker.setTitle(state.getSourceName());
 		marker.setPosition(stateloc);
-		Float angDeg = getRotationDeg(wgs84displace);
+		
+		Float angDeg = (float) Math.toDegrees(state.getPsi());
 		marker.setRotation(angDeg);
 		String snippet = "Height " + df.format(alt) + "; Speed: "
 				+ df.format(speed) + "; Rotation:" + angDeg;
 		marker.setSnippet(snippet);
-	}
-
-	private Float getRotationDeg(double[] wgs84displace) {
-		double[] wgs84displacement = WGS84Utilities.WGS84displacement(
-				Math.toDegrees(lastPos.latitude),
-				Math.toDegrees(lastPos.longitude), 0, wgs84displace[0],
-				wgs84displace[1], 0);
-		double directionAng = Math.atan2(wgs84displacement[0],
-				wgs84displacement[1]);
-		Float angDeg = new Float(Math.toDegrees(directionAng));
-		return angDeg;
 	}
 
 }
