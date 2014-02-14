@@ -21,6 +21,7 @@ public class Sys {
 		this.marker.setFlat(true);
 		this.marker.setIcon(BitmapDescriptorFactory
 				.fromResource(R.drawable.ic_system));
+		this.marker.setAnchor((float)0.5, (float)0.5);
 	}
 
 	public void update(EstimatedState state) {
@@ -38,7 +39,7 @@ public class Sys {
 		Float angDeg = (float) Math.toDegrees(state.getPsi());
 		marker.setRotation(angDeg);
 		String snippet = "Height " + df.format(alt) + "; Speed: "
-				+ df.format(speed) + "; Rotation:" + angDeg;
+				+ df.format(speed) + "; Heading:" + angDeg;
 		marker.setSnippet(snippet);
 	}
 
