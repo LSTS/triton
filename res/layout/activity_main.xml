@@ -1,5 +1,36 @@
-<fragment xmlns:android="http://schemas.android.com/apk/res/android"
-  android:id="@+id/map_fragment"
-  android:layout_width="match_parent"
-  android:layout_height="match_parent"
-  class="com.google.android.gms.maps.SupportMapFragment"/>
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:dividerPadding="10px"
+    android:orientation="vertical" >
+
+   	<LinearLayout
+   	    android:layout_width="match_parent"
+   	    android:layout_height="50px"
+   	    android:layout_gravity="bottom|right"
+   	    android:background="#A000"
+   	    android:orientation="horizontal">
+
+   		<TextView
+   		    android:id="@+id/vehicle_name"
+   		    style="@style/VehicleProps"
+   		    android:text="No vehicle available" />
+
+   		<TextView
+   		    style="@style/VehicleProps"
+   		    android:id="@+id/vehicle_speed"
+   		    android:text="_" />
+
+   		<TextView
+   		    android:id="@+id/vehicle_height"
+   		    style="@style/VehicleProps"
+   		    android:text="_" />
+      
+    </LinearLayout>
+	<fragment xmlns:android="http://schemas.android.com/apk/res/android"
+	  android:id="@+id/map_fragment"
+	  android:layout_width="match_parent"
+	  android:layout_height="match_parent"
+	  class="com.google.android.gms.maps.SupportMapFragment"/>
+</LinearLayout>

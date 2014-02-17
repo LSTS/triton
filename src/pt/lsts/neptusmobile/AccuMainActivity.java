@@ -109,6 +109,12 @@ public class AccuMainActivity extends FragmentActivity {
 	private void setUpMap() {
 		// Markers
 		sysMarkers = new ConcurrentHashMap<Integer, Sys>();
+		// Test
+		Marker marker = mMap.addMarker(new MarkerOptions().position(new LatLng(
+				0, 0)));
+		Sys sys = new Sys(marker);
+		sys.fillTestData();
+		sysMarkers.put(24, sys);
 		// My location
 		mMap.setMyLocationEnabled(true);
 		// Camera

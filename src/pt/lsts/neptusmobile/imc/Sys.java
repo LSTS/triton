@@ -43,4 +43,11 @@ public class Sys {
 		marker.setSnippet(snippet);
 	}
 
+	public void fillTestData() {
+		marker.setTitle("Test vehicle");
+		marker.setPosition(new LatLng(0, 0));
+		marker.setRotation(90);
+		marker.setSnippet("Height 100m; Speed: 18m/s");
+	}
+
 }
