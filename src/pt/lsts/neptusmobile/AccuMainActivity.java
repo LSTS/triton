@@ -8,15 +8,18 @@ import pt.lsts.imc.net.IMCProtocol;
 import pt.lsts.neptus.messages.listener.MessageInfo;
 import pt.lsts.neptus.messages.listener.MessageListener;
 import pt.lsts.neptusmobile.imc.Sys;
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.Menu;
+import android.widget.TextView;
 
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -30,27 +33,23 @@ public class AccuMainActivity extends FragmentActivity {
 	 * available.
 	 */
 	private GoogleMap mMap;
-	private ConcurrentHashMap<Integer, Sys> sysMarkers;
+	private ConcurrentHashMap<String, Sys> sysMarkers;
 
 	// ImcManager imcManager;
 	// Hook imcHook;
+	@SuppressLint("HandlerLeak")
 	private final Handler uiHandler = new Handler() {
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see android.os.Handler#handleMessage(android.os.Message)
-		 */
 		@Override
 		public void handleMessage(Message msg) {
 			Log.w(NAME, msg.toString());
 			EstimatedState state = (EstimatedState) msg.obj;
-			int srcId = state.getSrc();
-			Sys system = sysMarkers.get(srcId);
+			String sourceName = state.getSourceName();
+			Sys system = sysMarkers.get(sourceName);
 			if (system == null) {
 				Marker marker = mMap.addMarker(new MarkerOptions()
 						.position(new LatLng(0, 0)));
 				system = new Sys(marker);
-				sysMarkers.put(srcId, system);
+				sysMarkers.put(sourceName, system);
 			}
 			system.update(state);
 
@@ -108,17 +107,51 @@ public class AccuMainActivity extends FragmentActivity {
 
 	private void setUpMap() {
 		// Markers
-		sysMarkers = new ConcurrentHashMap<Integer, Sys>();
-		// Test
-		Marker marker = mMap.addMarker(new MarkerOptions().position(new LatLng(
-				0, 0)));
-		Sys sys = new Sys(marker);
-		sys.fillTestData();
-		sysMarkers.put(24, sys);
+		sysMarkers = new ConcurrentHashMap<String, Sys>();
+		// Testing data
+		fillTestSystems();
 		// My location
 		mMap.setMyLocationEnabled(true);
 		// Camera
 		// mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 13));
+		mMap.setOnMarkerClickListener(new OnMarkerClickListener() {
+
+			@Override
+			public boolean onMarkerClick(Marker marker) {
+				Sys sys = sysMarkers.get(marker.getTitle());
+				TextView textV = (TextView) findViewById(R.id.vehicle_name);
+				textV.setText(marker.getTitle());
+				textV = (TextView) findViewById(R.id.vehicle_height);
+				textV.setText(sys.getHeight() + "");
+				textV = (TextView) findViewById(R.id.vehicle_speed);
+				textV.setText(sys.getSpeed() + "");
+				return true;
+			}
+		});
+	}
+
+	private void fillTestSystems() {
+		// Test X8-00
+		String title = "Test X8-00";
+		LatLng coord = new LatLng(0, 0);
+		int rotation = 90;
+		float heightIn = 100f;
+		float speedIn = 18.2f;
+		Marker marker = mMap.addMarker(new MarkerOptions().position(new LatLng(
+				0, 0)));
+		Sys sys = new Sys(marker);
+		sys.fillTestData(title, coord, rotation, heightIn, speedIn);
+		sysMarkers.put(title, sys);
+		// Test X8-02
+		title = "Test X8-02";
+		coord = new LatLng(0, 0.5);
+		rotation = 45;
+		heightIn = 180f;
+		speedIn = 15.3f;
+		marker = mMap.addMarker(new MarkerOptions().position(coord));
+		sys = new Sys(marker);
+		sys.fillTestData(title, coord, rotation, heightIn, speedIn);
+		sysMarkers.put(title, sys);
 	}
 
 
