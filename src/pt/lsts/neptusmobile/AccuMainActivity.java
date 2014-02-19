@@ -1,5 +1,6 @@
 package pt.lsts.neptusmobile;
 
+import java.text.DecimalFormat;
 import java.util.concurrent.ConcurrentHashMap;
 
 import pt.lsts.imc.EstimatedState;
@@ -42,7 +43,7 @@ public class AccuMainActivity extends FragmentActivity {
 	private final Handler uiHandler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
-			Log.w(NAME, msg.toString());
+			// Log.w(NAME, msg.toString());
 			EstimatedState state = (EstimatedState) msg.obj;
 			String sourceName = state.getSourceName();
 			Sys system = sysMarkers.get(sourceName);
@@ -51,6 +52,7 @@ public class AccuMainActivity extends FragmentActivity {
 						.position(new LatLng(0, 0)));
 				system = new Sys(marker);
 				sysMarkers.put(sourceName, system);
+				Log.w(NAME, "Adding system " + sourceName);
 			}
 			system.update(state);
 
@@ -107,6 +109,8 @@ public class AccuMainActivity extends FragmentActivity {
 	}
 
 	private void setUpMap() {
+		// Padding for left hand info
+		mMap.setPadding(150, 0, 0, 0);
 		// Markers
 		sysMarkers = new ConcurrentHashMap<String, Sys>();
 		// Testing data
@@ -120,13 +124,14 @@ public class AccuMainActivity extends FragmentActivity {
 			@Override
 			public boolean onMarkerClick(Marker marker) {
 				Sys sys = sysMarkers.get(marker.getTitle());
+				DecimalFormat df = new DecimalFormat("#.##");
 				// Update text
 				TextView textV = (TextView) findViewById(R.id.vehicle_name);
 				textV.setText(marker.getTitle());
 				textV = (TextView) findViewById(R.id.vehicle_height);
-				textV.setText(sys.getHeight() + "");
+				textV.setText(df.format(sys.getHeight()) + "m");
 				textV = (TextView) findViewById(R.id.vehicle_speed);
-				textV.setText(sys.getSpeed() + "");
+				textV.setText(df.format(sys.getSpeed()) + "m/s");
 				// Update markers
 				if (selectedVehicle != null) {
 					selectedVehicle.setAsUnselectedVehicle();
@@ -152,7 +157,7 @@ public class AccuMainActivity extends FragmentActivity {
 		sysMarkers.put(title, sys);
 		// Test X8-02
 		title = "Test X8-02";
-		coord = new LatLng(0, 0.5);
+		coord = new LatLng(0, 20.5);
 		rotation = 45;
 		heightIn = 180f;
 		speedIn = 15.3f;
