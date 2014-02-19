@@ -43,7 +43,7 @@ public class Sys {
 				Math.toDegrees(state.getLon()), state.getHeight(),
 				state.getX(), state.getY(), state.getZ());
 		LatLng stateloc = new LatLng((wgs84displace[0]), wgs84displace[1]);
-		this.height = new Float(wgs84displace[2]);
+		this.height = new Float(Math.abs(wgs84displace[2]));
 		// Speed
 		this.speed = new Float(state.getU());
 		// Marker

@@ -3,8 +3,8 @@
 
     <string name="app_name">Triton</string>
     <string name="action_settings">Settings</string>
-    <string name="label_vehicle">No vehicle available</string>
-    <string name="label_speed">_</string>
-    <string name="label_altitude">_</string>
+    <string name="label_vehicle"></string>
+    <string name="label_speed"></string>
+    <string name="label_altitude"></string>
 
 </resources>
