@@ -34,6 +34,7 @@ public class AccuMainActivity extends FragmentActivity {
 	 */
 	private GoogleMap mMap;
 	private ConcurrentHashMap<String, Sys> sysMarkers;
+	private Sys selectedVehicle;
 
 	// ImcManager imcManager;
 	// Hook imcHook;
@@ -119,12 +120,19 @@ public class AccuMainActivity extends FragmentActivity {
 			@Override
 			public boolean onMarkerClick(Marker marker) {
 				Sys sys = sysMarkers.get(marker.getTitle());
+				// Update text
 				TextView textV = (TextView) findViewById(R.id.vehicle_name);
 				textV.setText(marker.getTitle());
 				textV = (TextView) findViewById(R.id.vehicle_height);
 				textV.setText(sys.getHeight() + "");
 				textV = (TextView) findViewById(R.id.vehicle_speed);
 				textV.setText(sys.getSpeed() + "");
+				// Update markers
+				if (selectedVehicle != null) {
+					selectedVehicle.setAsUnselectedVehicle();
+				}
+				sys.setAsSelectedVehicle();
+				selectedVehicle = sys;
 				return true;
 			}
 		});

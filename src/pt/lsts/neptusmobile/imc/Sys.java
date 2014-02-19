@@ -21,9 +21,19 @@ public class Sys {
 		this.marker = marker;
 		this.marker.setFlat(true);
 		this.marker.setIcon(BitmapDescriptorFactory
-				.fromResource(R.drawable.ic_system));
+				.fromResource(R.drawable.ic_sys));
 		this.marker.setAnchor((float)0.5, (float)0.5);
 	}
+
+	public void setAsSelectedVehicle() {
+		marker.setIcon(BitmapDescriptorFactory
+				.fromResource(R.drawable.ic_main_sys));
+	}
+
+	public void setAsUnselectedVehicle() {
+		marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_sys));
+	}
+
 
 	@SuppressLint("UseValueOf")
 	public void update(EstimatedState state) {
