@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="744.09448819"
+   height="1052.3622047"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.48.3.1 r9886"
+   sodipodi:docname="New document 1">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.4142136"
+     inkscape:cx="154.6304"
+     inkscape:cy="438.83576"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1855"
+     inkscape:window-height="1056"
+     inkscape:window-x="65"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       style="fill:#ffa500;fill-opacity:1;stroke:none"
+       d="m 78.489269,681.32249 15.842507,-32 15.842604,31.99877 -14.43037,-3.05782 -1.422634,-19.29388 -1.40112,19.29358 z"
+       id="path3050"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/meg/workspace/Triton/res/drawable-hdpi/ic_main_sys.png"
+       inkscape:export-xdpi="500"
+       inkscape:export-ydpi="500" />
+    <path
+       style="fill:#808080;fill-opacity:1;stroke:none"
+       d="m 275.48544,685.11031 15.8425,-32 15.84261,31.99877 -14.43037,-3.05782 -1.42264,-19.29388 -1.40112,19.29358 z"
+       id="path3050-7"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/meg/workspace/Triton/res/drawable-hdpi/ic_sys.png"
+       inkscape:export-xdpi="500"
+       inkscape:export-ydpi="500" />
+  </g>
+</svg>
