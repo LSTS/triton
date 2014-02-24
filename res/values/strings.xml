@@ -6,5 +6,8 @@
     <string name="label_vehicle"></string>
     <string name="label_speed"></string>
     <string name="label_altitude"></string>
+    <string name="label_vehicle_speed">Speed</string>
+    <string name="label_vehicle_height">Height</string>
+    
 
 </resources>
