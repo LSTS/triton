@@ -74,4 +74,8 @@ public class Sys {
 	public float getSpeed() {
 		return speed;
 	}
+
+	public String getName() {
+		return marker.getTitle();
+	}
 }

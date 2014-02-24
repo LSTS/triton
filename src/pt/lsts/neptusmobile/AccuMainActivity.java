@@ -55,7 +55,10 @@ public class AccuMainActivity extends FragmentActivity {
 				Log.w(NAME, "Adding system " + sourceName);
 			}
 			system.update(state);
-
+			if (selectedVehicle != null
+					&& sourceName.equals(selectedVehicle.getName())) {
+				updateLabels(system);
+			}
 		}
 	};
 
@@ -124,14 +127,7 @@ public class AccuMainActivity extends FragmentActivity {
 			@Override
 			public boolean onMarkerClick(Marker marker) {
 				Sys sys = sysMarkers.get(marker.getTitle());
-				DecimalFormat df = new DecimalFormat("#.##");
-				// Update text
-				TextView textV = (TextView) findViewById(R.id.vehicle_name);
-				textV.setText(marker.getTitle());
-				textV = (TextView) findViewById(R.id.vehicle_height);
-				textV.setText(df.format(sys.getHeight()) + "m");
-				textV = (TextView) findViewById(R.id.vehicle_speed);
-				textV.setText(df.format(sys.getSpeed()) + "m/s");
+				updateLabels(sys);
 				// Update markers
 				if (selectedVehicle != null) {
 					selectedVehicle.setAsUnselectedVehicle();
@@ -140,7 +136,19 @@ public class AccuMainActivity extends FragmentActivity {
 				selectedVehicle = sys;
 				return true;
 			}
+
 		});
+	}
+
+	private void updateLabels(Sys sys) {
+		DecimalFormat df = new DecimalFormat("#.##");
+		// Update text
+		TextView textV = (TextView) findViewById(R.id.vehicle_name);
+		textV.setText(sys.getName());
+		textV = (TextView) findViewById(R.id.vehicle_height);
+		textV.setText(df.format(sys.getHeight()) + "m");
+		textV = (TextView) findViewById(R.id.vehicle_speed);
+		textV.setText(df.format(sys.getSpeed()) + "m/s");
 	}
 
 	private void fillTestSystems() {
