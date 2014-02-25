@@ -27,7 +27,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 public class AccuMainActivity extends FragmentActivity {
-	public static final String NAME = "MainActivity";
+	public static final String TAG = "MainActivity";
 
 	/**
 	 * Note that this may be null if the Google Play services APK is not
@@ -43,21 +43,25 @@ public class AccuMainActivity extends FragmentActivity {
 	private final Handler uiHandler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
-			// Log.w(NAME, msg.toString());
-			EstimatedState state = (EstimatedState) msg.obj;
-			String sourceName = state.getSourceName();
-			Sys system = sysMarkers.get(sourceName);
-			if (system == null) {
-				Marker marker = mMap.addMarker(new MarkerOptions()
-						.position(new LatLng(0, 0)));
-				system = new Sys(marker);
-				sysMarkers.put(sourceName, system);
-				Log.w(NAME, "Adding system " + sourceName);
-			}
-			system.update(state);
-			if (selectedVehicle != null
-					&& sourceName.equals(selectedVehicle.getName())) {
-				updateLabels(system);
+			try {
+				// Log.w(NAME, msg.toString());
+				EstimatedState state = (EstimatedState) msg.obj;
+				String sourceName = state.getSourceName();
+				Sys system = sysMarkers.get(sourceName);
+				if (system == null) {
+					Marker marker = mMap.addMarker(new MarkerOptions()
+							.position(new LatLng(0, 0)));
+					system = new Sys(marker);
+					sysMarkers.put(sourceName, system);
+					Log.w(TAG, "Adding system " + sourceName);
+				}
+				system.update(state);
+				if (selectedVehicle != null
+						&& sourceName.equals(selectedVehicle.getName())) {
+					updateLabels(system);
+				}
+			} catch (Exception e) {
+				Log.e(TAG, e.toString());
 			}
 		}
 	};
@@ -84,16 +88,16 @@ public class AccuMainActivity extends FragmentActivity {
 					public void onMessage(MessageInfo info, IMCMessage msg) {
 						EstimatedState state = (EstimatedState) msg;
 						uiHandler.sendMessage(uiHandler.obtainMessage(0, state));
-						Log.w(NAME, "Got msg.");
+						Log.w(TAG, "Got msg.");
 					}
 				}, "EstimatedState");
-
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
+		Log.i(TAG, "on Create Options Menu, adding items to action bar.");
 		return true;
 	}
 
@@ -175,10 +179,9 @@ public class AccuMainActivity extends FragmentActivity {
 		sysMarkers.put(title, sys);
 	}
 
-
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
+		Log.i(TAG, "Accu activity is about to be destroyed.");
 	}
-
 }
