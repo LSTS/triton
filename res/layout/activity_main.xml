@@ -13,26 +13,45 @@
       android:background="#A000"
       android:orientation="vertical"
       android:layout_height="match_parent"
-      android:layout_width="150px">
+      android:layout_width="150dp"
+      android:weightSum="10">
       <TextView
         android:id="@+id/vehicle_name"
         style="@style/VehicleProps"
         android:text="@string/label_vehicle"/>
-      <TextView
-        android:id="@+id/label_vehicle_speed"
-        style="@style/VehicleProps"
-        android:text="@string/label_vehicle_speed"/>
-      <TextView
-        android:id="@+id/vehicle_speed"
-        style="@style/VehicleProps"
-        android:text="@string/label_speed"/>
-      <TextView
-        android:id="@+id/label_vehicle_height"
-        style="@style/VehicleProps"
-        android:text="@string/label_vehicle_height"/>
-      <TextView
-        android:id="@+id/vehicle_height"
-        style="@style/VehicleProps"
-        android:text="@string/label_altitude"/>
+
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_gravity="top"
+          android:orientation="horizontal"
+          android:weightSum="5" >
+
+	      <TextView
+	        android:id="@+id/label_vehicle_speed"
+	        style="@style/VehicleProps"
+	        android:text="@string/label_vehicle_speed"/>
+	      <TextView
+	        android:id="@+id/vehicle_speed"
+	        style="@style/VehicleProps"
+	        android:text="@string/label_speed"/>
+      </LinearLayout>
+      
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_gravity="top"
+          android:orientation="horizontal"
+          android:weightSum="5" >
+
+	      <TextView
+	        android:id="@+id/label_vehicle_height"
+	        style="@style/VehicleProps"
+	        android:text="@string/label_vehicle_height"/>
+	      <TextView
+	        android:id="@+id/vehicle_height"
+	        style="@style/VehicleProps"
+	        android:text="@string/label_altitude"/>
+      </LinearLayout>
     </LinearLayout>
   </RelativeLayout>
