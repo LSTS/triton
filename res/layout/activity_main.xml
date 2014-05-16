@@ -35,6 +35,7 @@
 	        android:id="@+id/vehicle_speed"
 	        style="@style/VehicleProps"
 	        android:text="@string/label_speed"/>
+
       </LinearLayout>
       
       <LinearLayout
@@ -48,10 +49,11 @@
 	        android:id="@+id/label_vehicle_height"
 	        style="@style/VehicleProps"
 	        android:text="@string/label_vehicle_height"/>
+
 	      <TextView
-	        android:id="@+id/vehicle_height"
-	        style="@style/VehicleProps"
-	        android:text="@string/label_altitude"/>
+	          android:id="@+id/vehicle_height"
+	          style="@style/VehicleProps"
+	          android:text="@string/label_altitude" />
       </LinearLayout>
     </LinearLayout>
   </RelativeLayout>
