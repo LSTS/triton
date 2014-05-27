@@ -61,8 +61,8 @@ public class AccuMainActivity extends FragmentActivity{
 			Log.i(TAG, "Creating data fragment.");
 			dataFrag = new DataFragment();
 			fm.beginTransaction().add(dataFrag, DATA_FRAG_TAG).commit();
-			setUpMapIfNeeded();
 		}
+		setUpMapIfNeeded();
 	}
 	
 	@Override
