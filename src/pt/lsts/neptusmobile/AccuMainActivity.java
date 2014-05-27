@@ -1,106 +1,106 @@
 package pt.lsts.neptusmobile;
 
 import java.text.DecimalFormat;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
+import java.util.Set;
 
 import pt.lsts.imc.EstimatedState;
 import pt.lsts.imc.IMCMessage;
 import pt.lsts.imc.net.IMCProtocol;
 import pt.lsts.neptus.messages.listener.MessageInfo;
 import pt.lsts.neptus.messages.listener.MessageListener;
-import pt.lsts.neptusmobile.imc.Sys;
-import android.annotation.SuppressLint;
+import pt.lsts.neptusmobile.data.DataFragment;
+import pt.lsts.neptusmobile.data.ImcSystem;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.util.Log;
-import android.view.Menu;
 import android.widget.TextView;
 
-import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class AccuMainActivity extends FragmentActivity {
+public class AccuMainActivity extends FragmentActivity{
 	public static final String TAG = "MainActivity";
 
+	private static final String DATA_FRAG_TAG = "data";
+	
 	/**
 	 * Note that this may be null if the Google Play services APK is not
 	 * available.
 	 */
 	private GoogleMap mMap;
-	private ConcurrentHashMap<String, Sys> sysMarkers;
-	private Sys selectedVehicle;
-
-	// ImcManager imcManager;
-	// Hook imcHook;
-	@SuppressLint("HandlerLeak")
-	private final Handler uiHandler = new Handler() {
-		@Override
-		public void handleMessage(Message msg) {
-			try {
-				// Log.w(NAME, msg.toString());
-				EstimatedState state = (EstimatedState) msg.obj;
-				String sourceName = state.getSourceName();
-				Sys system = sysMarkers.get(sourceName);
-				if (system == null) {
-					Marker marker = mMap.addMarker(new MarkerOptions()
-							.position(new LatLng(0, 0)));
-					system = new Sys(marker);
-					sysMarkers.put(sourceName, system);
-					Log.w(TAG, "Adding system " + sourceName);
-				}
-				system.update(state);
-				if (selectedVehicle != null
-						&& sourceName.equals(selectedVehicle.getName())) {
-					updateLabels(system);
-				}
-			} catch (Exception e) {
-				Log.e(TAG, e.toString());
-			}
-		}
-	};
-
+	private HashMap<String, Marker> markers;
+	private Marker selectedSys;
+	// TODO transform into DB
+	private DataFragment dataFrag;
+	private IMCProtocol proto;
+	
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
+	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		GooglePlayServicesUtil
-				.isGooglePlayServicesAvailable(getApplicationContext());
 		setContentView(R.layout.activity_main);
+		markers = new HashMap<String, Marker>();
+		FragmentManager fm = getSupportFragmentManager();
 		// If we're being restored from a previous state,
-		// then we don't need to do anytohing and should return or else
+		// then we don't need to add fragments or else
 		// we could end up with overlapping fragments.
 		if (savedInstanceState != null) {
-			return;
+			Log.i(TAG, "Loading data fragment.");
+			// Load fragment
+	        dataFrag = (DataFragment) fm.findFragmentByTag(DATA_FRAG_TAG);
 		}
-
-		setUpMapIfNeeded();
-
-		IMCProtocol proto = new IMCProtocol(5000);
-		proto.addMessageListener(
-				new MessageListener<MessageInfo, IMCMessage>() {
-					@Override
-					public void onMessage(MessageInfo info, IMCMessage msg) {
-						EstimatedState state = (EstimatedState) msg;
-						uiHandler.sendMessage(uiHandler.obtainMessage(0, state));
-						Log.w(TAG, "Got msg.");
-					}
-				}, "EstimatedState");
+		else{
+			Log.i(TAG, "Creating data fragment.");
+			dataFrag = new DataFragment();
+			fm.beginTransaction().add(dataFrag, DATA_FRAG_TAG).commit();
+			setUpMapIfNeeded();
+		}
 	}
-
+	
 	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main, menu);
-		Log.i(TAG, "on Create Options Menu, adding items to action bar.");
-		return true;
+	protected void onStop() {
+		super.onStop();
+		Log.i(TAG, "onStop");
 	}
-
+	
+	@Override
+	protected void onStart() {
+		super.onStart();
+		Log.i(TAG, "onStart");
+		loadMarkers();
+			proto = new IMCProtocol(5000);
+			proto.addMessageListener(
+					new MessageListener<MessageInfo, IMCMessage>() {
+						@Override
+						public void onMessage(MessageInfo info, IMCMessage msg) {
+							EstimatedState state = (EstimatedState) msg;
+							uiHandler.sendMessage(uiHandler.obtainMessage(0, state));
+							Log.w(TAG, "Got msg.");
+						}
+					}, "EstimatedState");
+	}
+	
+	private void loadMarkers(){
+		Set<String> nameAllSytems = dataFrag.getNameAllSytems();
+		Marker marker;
+		ImcSystem system;
+		for (String name : nameAllSytems) {
+			marker = mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)));
+			markers.put(name, marker);
+			system = dataFrag.getSystem(name);
+			system.updateMarker(marker);
+			setAsUnselectedVehicle(marker);
+		}
+	}
+	
 	private void setUpMapIfNeeded() {
 		// Do a null check to confirm that we have not already instantiated the
 		// map.
@@ -114,37 +114,74 @@ public class AccuMainActivity extends FragmentActivity {
 			}
 		}
 	}
+	
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		proto.stop();
+		Log.i(TAG, "MapActivity is about to be destroyed.");
+	}
 
 	private void setUpMap() {
 		// Padding for left hand info
-		mMap.setPadding(150, 0, 0, 0);
-		// Markers
-		sysMarkers = new ConcurrentHashMap<String, Sys>();
-		// Testing data
-		fillTestSystems();
+		mMap.setPadding(300, 0, 0, 0);
 		// My location
 		mMap.setMyLocationEnabled(true);
 		// Camera
-		// mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 13));
 		mMap.setOnMarkerClickListener(new OnMarkerClickListener() {
 
 			@Override
 			public boolean onMarkerClick(Marker marker) {
-				Sys sys = sysMarkers.get(marker.getTitle());
+				ImcSystem sys = dataFrag.getSystem(marker.getTitle());
 				updateLabels(sys);
-				// Update markers
-				if (selectedVehicle != null) {
-					selectedVehicle.setAsUnselectedVehicle();
-				}
-				sys.setAsSelectedVehicle();
-				selectedVehicle = sys;
+				toggleMarkerSelection(marker, sys);
 				return true;
+			}
+
+			private void toggleMarkerSelection(Marker marker, ImcSystem sys) {
+				if (selectedSys != null) {
+					setAsUnselectedVehicle(selectedSys);
+				}
+				setAsSelectedVehicle(marker);
+				selectedSys = marker;
 			}
 
 		});
 	}
-
-	private void updateLabels(Sys sys) {
+	
+	// TODO transform into service
+	private final Handler uiHandler = new Handler() {
+		@Override
+		public void handleMessage(Message msg) {
+			try {
+				EstimatedState state = (EstimatedState) msg.obj;
+				String sourceName = state.getSourceName();
+				Marker marker = markers.get(sourceName);
+				ImcSystem system;
+				if (marker == null) {
+					marker = mMap.addMarker(new MarkerOptions()
+							.position(new LatLng(0, 0)));
+					markers.put(sourceName, marker);
+					system = new ImcSystem(state);
+					dataFrag.addSystem(system);
+					Log.w(TAG, "Adding system " + sourceName);
+				}
+				else{
+					system = dataFrag.getSystem(sourceName);
+					system.update(state);
+				}
+				system.updateMarker(marker);
+				if (selectedSys != null
+						&& sourceName.equals(selectedSys.getTitle())) {
+					updateLabels(system);
+				}
+			} catch (Exception e) {
+				Log.e(TAG, e.toString());
+			}
+		}
+	};
+	
+	private void updateLabels(ImcSystem sys) {
 		DecimalFormat df = new DecimalFormat("#.##");
 		// Update text
 		TextView textV = (TextView) findViewById(R.id.vehicle_name);
@@ -155,33 +192,12 @@ public class AccuMainActivity extends FragmentActivity {
 		textV.setText(df.format(sys.getSpeed()) + "m/s");
 	}
 
-	private void fillTestSystems() {
-		// Test X8-00
-		String title = "Test X8-00";
-		LatLng coord = new LatLng(0, 0);
-		int rotation = 90;
-		float heightIn = 100f;
-		float speedIn = 18.2f;
-		Marker marker = mMap.addMarker(new MarkerOptions().position(new LatLng(
-				0, 0)));
-		Sys sys = new Sys(marker);
-		sys.fillTestData(title, coord, rotation, heightIn, speedIn);
-		sysMarkers.put(title, sys);
-		// Test X8-02
-		title = "Test X8-02";
-		coord = new LatLng(0, 20.5);
-		rotation = 45;
-		heightIn = 180f;
-		speedIn = 15.3f;
-		marker = mMap.addMarker(new MarkerOptions().position(coord));
-		sys = new Sys(marker);
-		sys.fillTestData(title, coord, rotation, heightIn, speedIn);
-		sysMarkers.put(title, sys);
+	private void setAsSelectedVehicle(Marker marker) {
+		marker.setIcon(BitmapDescriptorFactory
+				.fromResource(R.drawable.ic_main_sys));
 	}
 
-	@Override
-	protected void onDestroy() {
-		super.onDestroy();
-		Log.i(TAG, "Accu activity is about to be destroyed.");
+	private void setAsUnselectedVehicle(Marker marker) {
+		marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_sys));
 	}
 }
