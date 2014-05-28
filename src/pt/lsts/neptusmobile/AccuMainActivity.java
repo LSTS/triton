@@ -83,7 +83,7 @@ public class AccuMainActivity extends FragmentActivity{
 						public void onMessage(MessageInfo info, IMCMessage msg) {
 							EstimatedState state = (EstimatedState) msg;
 							uiHandler.sendMessage(uiHandler.obtainMessage(0, state));
-							Log.w(TAG, "Got msg.");
+						// Log.w(TAG, "Got msg.");
 						}
 					}, "EstimatedState");
 	}
@@ -159,9 +159,7 @@ public class AccuMainActivity extends FragmentActivity{
 				Marker marker = markers.get(sourceName);
 				ImcSystem system;
 				if (marker == null) {
-					marker = mMap.addMarker(new MarkerOptions()
-							.position(new LatLng(0, 0)));
-					markers.put(sourceName, marker);
+					marker = createNewMarker(sourceName);
 					system = new ImcSystem(state);
 					dataFrag.addSystem(system);
 					Log.w(TAG, "Adding system " + sourceName);
@@ -178,6 +176,18 @@ public class AccuMainActivity extends FragmentActivity{
 			} catch (Exception e) {
 				Log.e(TAG, e.toString());
 			}
+		}
+
+		private Marker createNewMarker(String sourceName) {
+			Marker marker;
+			marker = mMap.addMarker(new MarkerOptions()
+					.position(new LatLng(0, 0)));
+			marker.setFlat(true);
+			marker.setIcon(BitmapDescriptorFactory
+					.fromResource(R.drawable.ic_sys));
+			marker.setAnchor((float) 0.5, (float) 0.5);
+			markers.put(sourceName, marker);
+			return marker;
 		}
 	};
 	
