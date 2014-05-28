@@ -9,7 +9,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 
 public class ImcSystem {
-	private String imcName;
+	private static final String TAG = "ImcSystem";
+	private final String imcName;
 	private float height;
 	private float speed;
 	private LatLng location;
@@ -32,6 +33,9 @@ public class ImcSystem {
 	}
 
 	public void update(EstimatedState state){
+		// Log.i(TAG, "IMC " + imcName + ": "
+		// + " [" + state.getLat() + "," + state.getLon() + "], ["
+		// + state.getX() + " " + state.getY() + "]");
 		// Location
 		double[] wgs84displace = WGS84Utilities.WGS84displace(
 				Math.toDegrees(state.getLat()),
@@ -44,6 +48,9 @@ public class ImcSystem {
 		this.speed = (float)state.getU();
 		// Rotation
 		rotation = (float) Math.toDegrees(state.getPsi());
+		// Log.i(TAG, imcName + " updated to " + height + "m, " + speed
+		// + "m/s, [" + location.latitude + "," + location.longitude
+		// + "] " + rotation + "º");
 	}
 	
 	public String getName(){
