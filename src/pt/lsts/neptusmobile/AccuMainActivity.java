@@ -89,13 +89,13 @@ public class AccuMainActivity extends FragmentActivity{
 	}
 	
 	private void loadMarkers(){
-		Set<String> nameAllSytems = dataFrag.getNameAllSytems();
+		Set<Integer> nameAllSytems = dataFrag.getimcIdAllSytems();
 		Marker marker;
 		ImcSystem system;
-		for (String name : nameAllSytems) {
+		for (Integer id : nameAllSytems) {
 			marker = mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)));
-			markers.put(name, marker);
-			system = dataFrag.getSystem(name);
+			system = dataFrag.getSystem(id);
+			markers.put(system.getImcName(), marker);
 			system.updateMarker(marker);
 			setAsUnselectedVehicle(marker);
 		}
@@ -155,19 +155,31 @@ public class AccuMainActivity extends FragmentActivity{
 		public void handleMessage(Message msg) {
 			try {
 				EstimatedState state = (EstimatedState) msg.obj;
+				int imcId = state.getSrc();
+				ImcSystem system = dataFrag.getSystem(imcId);
+				Marker marker;
 				String sourceName = state.getSourceName();
-				Marker marker = markers.get(sourceName);
-				ImcSystem system;
-				if (marker == null) {
+				if (system == null) {
+					// Really a new system
+					// add both in markers and dataFrag
 					marker = createNewMarker(sourceName);
 					system = new ImcSystem(state);
 					dataFrag.addSystem(system);
 					Log.w(TAG, "Adding system " + sourceName);
 				}
-				else{
-					system = dataFrag.getSystem(sourceName);
+				else {
+					// Known system
+					String oldSysName = system.getImcName();
+					marker = markers.get(oldSysName);
+					// After getting the old name update the data
 					system.update(state);
+					if (!oldSysName.equals(sourceName)) {
+						// First time receiving the name
+						markers.remove(oldSysName);
+						markers.put(sourceName, marker);
+					}
 				}
+				// In any case the data on the system must be updated
 				system.updateMarker(marker);
 				if (selectedSys != null
 						&& sourceName.equals(selectedSys.getTitle())) {

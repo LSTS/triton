@@ -4,13 +4,15 @@ import java.text.DecimalFormat;
 
 import pt.lsts.imc.EstimatedState;
 import pt.lsts.util.WGS84Utilities;
+import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 
 public class ImcSystem {
 	private static final String TAG = "ImcSystem";
-	private final String imcName;
+	private String imcName;
+	private final int imcId;
 	private float height;
 	private float speed;
 	private LatLng location;
@@ -18,14 +20,16 @@ public class ImcSystem {
 
 	public ImcSystem (EstimatedState msg){
 		imcName = msg.getSourceName();
+		imcId = msg.getSrc();
 		update(msg);
 	}
 	
 	// For creating dummy data
-	public ImcSystem(String imcName, float height, float speed,
+	public ImcSystem(int imcId, String imcName, float height, float speed,
 			LatLng location, float rotation) {
 		super();
 		this.imcName = imcName;
+		this.imcId = imcId;
 		this.height = height;
 		this.speed = speed;
 		this.location = location;
@@ -51,6 +55,7 @@ public class ImcSystem {
 		// Log.i(TAG, imcName + " updated to " + height + "m, " + speed
 		// + "m/s, [" + location.latitude + "," + location.longitude
 		// + "] " + rotation + "º");
+		imcName = state.getSourceName();
 	}
 	
 	public String getName(){
@@ -65,6 +70,7 @@ public class ImcSystem {
 		String snippet = "Height " + df.format(height) + "; Speed: "
 				+ df.format(speed) + "; Heading:" + rotation;
 		marker.setSnippet(snippet);
+		Log.i(TAG, "Updating " + imcName + " to " + location.toString());
 	}
 
 	public float getHeight() {
@@ -78,5 +84,12 @@ public class ImcSystem {
 
 	public float getSpeed() {
 		return speed;
+	}
+
+	/**
+	 * @return the IMC Id
+	 */
+	public int getImcId() {
+		return imcId;
 	}
 }
