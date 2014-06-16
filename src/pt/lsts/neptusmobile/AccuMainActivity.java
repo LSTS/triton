@@ -42,6 +42,7 @@ public class AccuMainActivity extends FragmentActivity{
 	// TODO transform into DB
 	private DataFragment dataFrag;
 	private IMCProtocol proto;
+	private boolean started = false;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -63,11 +64,14 @@ public class AccuMainActivity extends FragmentActivity{
 			fm.beginTransaction().add(dataFrag, DATA_FRAG_TAG).commit();
 		}
 		setUpMapIfNeeded();
+
 	}
 	
 	@Override
 	protected void onStop() {
 		super.onStop();
+		started = false;
+		cleanMarkers();
 		Log.i(TAG, "onStop");
 	}
 	
@@ -86,6 +90,7 @@ public class AccuMainActivity extends FragmentActivity{
 						// Log.w(TAG, "Got msg.");
 						}
 					}, "EstimatedState");
+		started = true;
 	}
 	
 	private void loadMarkers(){
@@ -93,9 +98,12 @@ public class AccuMainActivity extends FragmentActivity{
 		Marker marker;
 		ImcSystem system;
 		for (Integer id : nameAllSytems) {
-			marker = mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)));
 			system = dataFrag.getSystem(id);
-			markers.put(system.getImcName(), marker);
+			// marker = mMap.addMarker(new MarkerOptions().position(new
+			// LatLng(0,
+			// 0)));
+			// markers.put(system.getImcName(), marker);
+			marker = createNewMarker(system.getImcName());
 			system.updateMarker(marker);
 			setAsUnselectedVehicle(marker);
 		}
@@ -122,9 +130,16 @@ public class AccuMainActivity extends FragmentActivity{
 		Log.i(TAG, "MapActivity is about to be destroyed.");
 	}
 
+	private void cleanMarkers() {
+		// Clean links for garbage collector
+		Set<String> keySet = markers.keySet();
+		for (String key : keySet) {
+			Marker tmp = markers.remove(key);
+			tmp.remove();
+		}
+	}
+
 	private void setUpMap() {
-		// Padding for left hand info
-		mMap.setPadding(300, 0, 0, 0);
 		// My location
 		mMap.setMyLocationEnabled(true);
 		// Camera
@@ -147,61 +162,88 @@ public class AccuMainActivity extends FragmentActivity{
 			}
 
 		});
+		// final LinearLayout llTotal = (LinearLayout)
+		// findViewById(R.id.sidebar);
+		// final ViewTreeObserver vto = llTotal.getViewTreeObserver();
+		// if (vto.isAlive()) {
+		// vto.addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
+		// @Override
+		// public void onGlobalLayout() {
+		// // Padding for left hand info - set here to wait for
+		// // inflation of layout
+		// LinearLayout sidebar = (LinearLayout) findViewById(R.id.sidebar);
+		// Log.i(TAG, "sidebar has " + sidebar.getWidth() + " px");
+		// mMap.setPadding(sidebar.getWidth() + 10, 0, 0, 0);
+		// vto.removeGlobalOnLayoutListener(this);
+		// }
+		// });
+		// }
 	}
 	
 	// TODO transform into service
 	private final Handler uiHandler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
-			try {
-				EstimatedState state = (EstimatedState) msg.obj;
-				int imcId = state.getSrc();
-				ImcSystem system = dataFrag.getSystem(imcId);
-				Marker marker;
-				String sourceName = state.getSourceName();
-				if (system == null) {
-					// Really a new system
-					// add both in markers and dataFrag
+			// try {
+			EstimatedState state = (EstimatedState) msg.obj;
+			int imcId = state.getSrc();
+			ImcSystem system = dataFrag.getSystem(imcId);
+			Marker marker = null;
+			String sourceName = state.getSourceName();
+			if (system == null) {
+				// Really a new system
+				// add both in markers and dataFrag
+				if (started)
 					marker = createNewMarker(sourceName);
-					system = new ImcSystem(state);
-					dataFrag.addSystem(system);
-					Log.w(TAG, "Adding system " + sourceName);
-				}
-				else {
-					// Known system
-					String oldSysName = system.getImcName();
+				system = new ImcSystem(state);
+				dataFrag.addSystem(system);
+				Log.w(TAG, "Adding system " + sourceName
+						+ " nothing in dataFrag with id " + imcId);
+			} else {
+				// Known system
+				String oldSysName = system.getImcName();
+
+				system.update(state);
+				if (started) {
 					marker = markers.get(oldSysName);
 					// After getting the old name update the data
-					system.update(state);
+					// Log.w(TAG, "Known system " + sourceName);
 					if (!oldSysName.equals(sourceName)) {
 						// First time receiving the name
-						markers.remove(oldSysName);
-						markers.put(sourceName, marker);
+						// Marker old = markers.remove(oldSysName);
+						// old.remove();
+						// markers.put(sourceName, marker);
+
+						marker.setTitle(sourceName);
+						Log.w(TAG, "First time receiving the name "
+								+ sourceName);
 					}
 				}
-				// In any case the data on the system must be updated
+			}
+			// In any case the data on the system must be updated
+			if (marker != null) {
 				system.updateMarker(marker);
 				if (selectedSys != null
 						&& sourceName.equals(selectedSys.getTitle())) {
 					updateLabels(system);
 				}
-			} catch (Exception e) {
-				Log.e(TAG, e.toString());
 			}
+			// } catch (Exception e) {
+			// Log.e(TAG, e.toString());
+			// }
 		}
 
-		private Marker createNewMarker(String sourceName) {
-			Marker marker;
-			marker = mMap.addMarker(new MarkerOptions()
-					.position(new LatLng(0, 0)));
-			marker.setFlat(true);
-			marker.setIcon(BitmapDescriptorFactory
-					.fromResource(R.drawable.ic_sys));
-			marker.setAnchor((float) 0.5, (float) 0.5);
-			markers.put(sourceName, marker);
-			return marker;
-		}
 	};
+
+	private Marker createNewMarker(String sourceName) {
+		Marker marker;
+		marker = mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)));
+		marker.setFlat(true);
+		marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_sys));
+		marker.setAnchor((float) 0.5, (float) 0.5);
+		markers.put(sourceName, marker);
+		return marker;
+	}
 	
 	private void updateLabels(ImcSystem sys) {
 		DecimalFormat df = new DecimalFormat("#.##");
