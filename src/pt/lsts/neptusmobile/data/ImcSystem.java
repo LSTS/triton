@@ -47,7 +47,12 @@ public class ImcSystem {
 				state.getX(), state.getY(), state.getZ());
 		location = new LatLng((wgs84displace[0]), wgs84displace[1]);
 		// Height
-		this.height = (float)Math.abs(wgs84displace[2]);
+		if (state.getZ() < 0) {
+			this.height = (float) state.getZ();
+		}
+		else{
+			this.height = (float)Math.abs(wgs84displace[2]);
+		}
 		// Speed
 		this.speed = (float)state.getU();
 		// Rotation
