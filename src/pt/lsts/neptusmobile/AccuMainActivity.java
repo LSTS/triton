@@ -42,7 +42,6 @@ public class AccuMainActivity extends FragmentActivity{
 	// TODO transform into DB
 	private DataFragment dataFrag;
 	private IMCProtocol proto;
-	private boolean started = false;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -68,14 +67,6 @@ public class AccuMainActivity extends FragmentActivity{
 	}
 	
 	@Override
-	protected void onStop() {
-		super.onStop();
-		started = false;
-		cleanMarkers();
-		Log.i(TAG, "onStop");
-	}
-	
-	@Override
 	protected void onStart() {
 		super.onStart();
 		Log.i(TAG, "onStart");
@@ -90,7 +81,7 @@ public class AccuMainActivity extends FragmentActivity{
 						// Log.w(TAG, "Got msg.");
 						}
 					}, "EstimatedState");
-		started = true;
+		// started = true;
 	}
 	
 	private void loadMarkers(){
@@ -99,11 +90,12 @@ public class AccuMainActivity extends FragmentActivity{
 		ImcSystem system;
 		for (Integer id : nameAllSytems) {
 			system = dataFrag.getSystem(id);
-			// marker = mMap.addMarker(new MarkerOptions().position(new
-			// LatLng(0,
-			// 0)));
-			// markers.put(system.getImcName(), marker);
-			marker = createNewMarker(system.getImcName());
+			String imcName = system.getImcName();
+			if (!markers.containsKey(imcName)) {
+				marker = createNewMarker(imcName);
+			} else {
+				marker = markers.get(imcName);
+			}
 			system.updateMarker(marker);
 			setAsUnselectedVehicle(marker);
 		}
@@ -122,11 +114,19 @@ public class AccuMainActivity extends FragmentActivity{
 			}
 		}
 	}
+
+	@Override
+	protected void onStop() {
+		super.onStop();
+		// started = false;
+		Log.i(TAG, "onStop");
+	}
 	
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
 		proto.stop();
+		cleanMarkers();
 		Log.i(TAG, "MapActivity is about to be destroyed.");
 	}
 
@@ -193,7 +193,7 @@ public class AccuMainActivity extends FragmentActivity{
 			if (system == null) {
 				// Really a new system
 				// add both in markers and dataFrag
-				if (started)
+				// if (started)
 					marker = createNewMarker(sourceName);
 				system = new ImcSystem(state);
 				dataFrag.addSystem(system);
@@ -204,7 +204,7 @@ public class AccuMainActivity extends FragmentActivity{
 				String oldSysName = system.getImcName();
 
 				system.update(state);
-				if (started) {
+				// if (started) {
 					marker = markers.get(oldSysName);
 					// After getting the old name update the data
 					// Log.w(TAG, "Known system " + sourceName);
@@ -218,7 +218,7 @@ public class AccuMainActivity extends FragmentActivity{
 						Log.w(TAG, "First time receiving the name "
 								+ sourceName);
 					}
-				}
+				// }
 			}
 			// In any case the data on the system must be updated
 			if (marker != null) {
@@ -236,6 +236,7 @@ public class AccuMainActivity extends FragmentActivity{
 	};
 
 	private Marker createNewMarker(String sourceName) {
+		Log.i(TAG, "Creating marker for " + sourceName);
 		Marker marker;
 		marker = mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)));
 		marker.setFlat(true);
