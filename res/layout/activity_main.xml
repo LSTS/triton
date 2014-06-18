@@ -9,6 +9,7 @@
       android:layout_height="match_parent"
        class="com.google.android.gms.maps.SupportMapFragment"/>
     <LinearLayout
+        android:id="@+id/sidebar"
       android:layout_gravity="top"
       android:background="#A000"
       android:orientation="vertical"

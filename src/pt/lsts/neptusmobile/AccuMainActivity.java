@@ -11,12 +11,16 @@ import pt.lsts.neptus.messages.listener.MessageInfo;
 import pt.lsts.neptus.messages.listener.MessageListener;
 import pt.lsts.neptusmobile.data.DataFragment;
 import pt.lsts.neptusmobile.data.ImcSystem;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.util.Log;
+import android.view.ViewTreeObserver;
+import android.view.ViewTreeObserver.OnGlobalLayoutListener;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.GoogleMap;
@@ -162,22 +166,27 @@ public class AccuMainActivity extends FragmentActivity{
 			}
 
 		});
-		// final LinearLayout llTotal = (LinearLayout)
-		// findViewById(R.id.sidebar);
-		// final ViewTreeObserver vto = llTotal.getViewTreeObserver();
-		// if (vto.isAlive()) {
-		// vto.addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
-		// @Override
-		// public void onGlobalLayout() {
-		// // Padding for left hand info - set here to wait for
-		// // inflation of layout
-		// LinearLayout sidebar = (LinearLayout) findViewById(R.id.sidebar);
-		// Log.i(TAG, "sidebar has " + sidebar.getWidth() + " px");
-		// mMap.setPadding(sidebar.getWidth() + 10, 0, 0, 0);
-		// vto.removeGlobalOnLayoutListener(this);
-		// }
-		// });
-		// }
+		setPaddingForMaps();
+	}
+
+	private void setPaddingForMaps() {
+		final LinearLayout llTotal = (LinearLayout)
+				findViewById(R.id.sidebar);
+		final ViewTreeObserver vto = llTotal.getViewTreeObserver();
+//		if (vto.isAlive()) {
+			vto.addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
+				@Override
+				public void onGlobalLayout() {
+					// Padding for left hand info - set here to wait for
+					// inflation of layout
+					LinearLayout sidebar = (LinearLayout) findViewById(R.id.sidebar);
+					Log.i(TAG, "sidebar has " + sidebar.getWidth() + " px");
+					mMap.setPadding(sidebar.getWidth() + 10, 0, 0, 0);
+				    llTotal.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+	                
+				}
+			});
+//		}
 	}
 	
 	// TODO transform into service
