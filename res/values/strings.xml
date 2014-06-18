@@ -8,6 +8,33 @@
     <string name="label_altitude"></string>
     <string name="label_vehicle_speed">Speed</string>
     <string name="label_vehicle_height">Height</string>
+    <string name="callOuts">Call out</string>
+    <string name="stop">Stop</string>
+    <string name="_0">zero</string>
+    <string name="_1">one</string>
+    <string name="_2">two</string>
+    <string name="_3">three</string>
+    <string name="_4">four</string>
+    <string name="_5">five</string>
+    <string name="_6">six</string>
+    <string name="_7">seven</string>
+    <string name="_8">eight</string>
+    <string name="_9">nine</string>
+    <string name="_10">ten</string>
+    <string name="_11">eleven</string>
+    <string name="_12">twelve</string>
+    <string name="_13">thirteen</string>
+    <string name="_14">fourteen</string>
+    <string name="_15">fifteen</string>
+    <string name="_16">sixteen</string>
+    <string name="_17">seventeen</string>
+    <string name="_18">eighteen</string>
+    <string name="_19">nineteen</string>
+    <string name="_20">twenty</string>
+    <string name="_30">thirty</string>
+    <string name="_40">forty</string>
+    <string name="tooFast">Too fast!</string>
+    <string name="dot">dot</string>
     
 
 </resources>

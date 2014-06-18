@@ -13,7 +13,7 @@
       android:layout_gravity="top"
       android:background="#A000"
       android:orientation="vertical"
-      android:layout_height="match_parent"
+      android:layout_height="fill_parent"
       android:layout_width="150dp"
       android:weightSum="10">
       <TextView
@@ -55,6 +55,21 @@
 	          android:id="@+id/vehicle_height"
 	          style="@style/VehicleProps"
 	          android:text="@string/label_altitude" />
+	      
       </LinearLayout>
+      
+      <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:layout_weight="10"
+        android:gravity="top"
+        android:text="" />
+      
+      <Button
+          android:id="@+id/callOuts"
+          style="@style/Button"
+          android:text="@string/callOuts"
+          android:onClick="startCallOut" />
+
     </LinearLayout>
   </RelativeLayout>
