@@ -1,8 +1,8 @@
 package pt.lsts.neptusmobile;
 
 import java.text.DecimalFormat;
-import java.util.HashMap;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import pt.lsts.imc.EstimatedState;
 import pt.lsts.imc.IMCMessage;
@@ -11,7 +11,6 @@ import pt.lsts.neptus.messages.listener.MessageInfo;
 import pt.lsts.neptus.messages.listener.MessageListener;
 import pt.lsts.neptusmobile.data.DataFragment;
 import pt.lsts.neptusmobile.data.ImcSystem;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -41,17 +40,19 @@ public class AccuMainActivity extends FragmentActivity{
 	 * available.
 	 */
 	private GoogleMap mMap;
-	private HashMap<String, Marker> markers;
+	// Avoid concurrency problems between ?update thread? and destruction
+	// thread
+	private ConcurrentHashMap<String, Marker> markers;
 	private Marker selectedSys;
 	// TODO transform into DB
 	private DataFragment dataFrag;
 	private IMCProtocol proto;
-	
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		markers = new HashMap<String, Marker>();
+		markers = new ConcurrentHashMap<String, Marker>();
 		FragmentManager fm = getSupportFragmentManager();
 		// If we're being restored from a previous state,
 		// then we don't need to add fragments or else
@@ -180,7 +181,7 @@ public class AccuMainActivity extends FragmentActivity{
 					// Padding for left hand info - set here to wait for
 					// inflation of layout
 					LinearLayout sidebar = (LinearLayout) findViewById(R.id.sidebar);
-					Log.i(TAG, "sidebar has " + sidebar.getWidth() + " px");
+				// Log.i(TAG, "sidebar has " + sidebar.getWidth() + " px");
 					mMap.setPadding(sidebar.getWidth() + 10, 0, 0, 0);
 				    llTotal.getViewTreeObserver().removeGlobalOnLayoutListener(this);
 	                
